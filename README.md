@@ -16,58 +16,62 @@ To write a YACC program to recognize a valid variable which starts with a letter
 
 Program name:ex4.l
 %{
-/* This LEX program returns the tokens for the Expression */
-#include"y.tab.h"
+#include "y.tab.h"
+#include <string.h>
 %}
+
 %%
-"int" {return INT;}
-"float" {return FLOAT;}
-"double" {return DOUBLE;}
-[a-zA-Z]*[0-9]* {printf("\nIdentifier is %s",yytext);
-return ID;
-}
-. return yytext[0];
-\n return 0;
+[a-zA-Z][a-zA-Z0-9]*    { yylval.str = strdup(yytext); return IDENTIFIER; }
+\n                      { return '\n'; }
+.                       { return yytext[0]; }
 %%
-int yywrap()
-{
-return 1;
+
+int yywrap() {
+    return 1;
 }
+
 Program name:ex4.y
 %{
-#include<stdio.h>
-/* This YACC program is for recognising the Expression*/
- %}
-%token ID INT FLOAT DOUBLE
-%%
-D: T L
-;
-L: L,ID
-| ID
-;
-T: INT
-| FLOAT
-| DOUBLE
-;
-%%
-extern FILE*yyin;
-main()
-{
-do
-{
-yyparse();
-}while(!feof(yyin));
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+extern int yylex();
+void yyerror(const char *msg);
+
+%}
+
+%union {
+    char *str;
 }
-yyerror(char*s)
-{
+
+%token <str> IDENTIFIER
+
+%%
+start:
+    IDENTIFIER '\n' {
+        printf("Valid variable: %s\n", $1);
+        free($1);  // clean up strdup memory
+    }
+    ;
+%%
+
+int main() {
+    printf("Enter a variable name:\n");
+    return yyparse();
 }
+
+void yyerror(const char *msg) {
+    printf("Invalid variable name\n");
+}
+
 
 ```
 
 # Output
 
 
-![image](https://github.com/user-attachments/assets/ecb96911-2b81-4651-8e7d-e3f8ea6f9a8b)
+![image](https://github.com/user-attachments/assets/1fc57150-d5d3-4107-b874-244bfcda4e3f)
 
 # Result
 A YACC program to recognize a valid variable which starts with a letter followed by any number of letters or digits is executed successfully and the output is verified.
